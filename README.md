@@ -32,6 +32,7 @@ To view the comprehensive guide with screenshots, go [here](https://obsproject.c
 - Option to hide lyrics when live view is hidden.
 - Hide lyrics toggle button.
 - Auto-show on slide change automatically displays the next slide, displaying the same number of lines as you have set on your **first** Display Next button. 
+- The two Display Next preset buttons have independent line counts.
 - Display all checkbox will automatically display all lines when auto-show is enabled.
 - Undo display button if you would like to go to previous lyric. Only the last 5 lyrics are saved. Redo display to go forward in saved lyrics.
 

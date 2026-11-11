@@ -8,7 +8,8 @@
 		"other-metadata": ""
 	},
 	"title": "Control de OpenLP",
-	"display-next": "Mostrar siguiente(s)",
+	"display-next-1": "Mostrar siguiente(s) (preajuste 1)",
+	"display-next-2": "Mostrar siguiente(s) (preajuste 2)",
 	"display-remaining": "Mostrar faltantes",
 	"undo-display": "Deshacer vista",
 	"redo-display": "Re-hacer vista",

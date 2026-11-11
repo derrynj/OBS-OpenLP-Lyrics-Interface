@@ -219,6 +219,9 @@ window.OpenLP = {
         let lyricsContainer = $(".lyrics").eq(lyricsContainerIndex);
         let data = JSON.parse(ev.data);
         switch (data.type) {
+            case "init":
+                OpenLP.updateText();
+                break;
             case "titleLayout":
                 let mTitleContainer = $(".title-container");
                 let mTitleDiv = $(".title");

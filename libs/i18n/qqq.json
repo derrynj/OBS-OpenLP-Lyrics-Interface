@@ -8,7 +8,8 @@
 		"other-metadata": ""
 	},
 	"title": "The title that will be displayed in the header bar",
-	"display-next": "This button preceeds a number spinner allowing the user to select how many lines to display",
+	"display-next-1": "First independently configured button for displaying the number of lines selected in its adjacent number spinner",
+	"display-next-2": "Second independently configured button for displaying the number of lines selected in its adjacent number spinner",
 	"display-remaining": "This button allows the user to display the rest of the lines on the current slide",
 	"undo-display": "This button allows the user to go back to whatever was previously displayed",
 	"redo-display": "After using the 'undo display' button, this button allows the user to display what follows",

@@ -9,7 +9,8 @@
 		"other-metadata": ""
 	},
 	"title": "OpenLP Lyrics Control",
-	"display-next": "Display next",
+	"display-next-1": "Display next (preset 1)",
+	"display-next-2": "Display next (preset 2)",
 	"display-remaining": "Display remaining",
 	"undo-display": "Undo display",
 	"redo-display": "Redo display",
