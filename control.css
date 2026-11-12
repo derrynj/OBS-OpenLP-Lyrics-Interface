@@ -34,11 +34,11 @@ body {
 
 h1 {
     margin: 0 0 4px;
-    font-size: 12pt;
+    font-size: 9pt;
 }
 
 #current-item {
-    font-size: 12pt;
+    font-size: 9pt;
     font-weight: bold;
     overflow-wrap: anywhere;
 }
@@ -63,7 +63,7 @@ h1 {
 }
 
 .slide-preview-panel h2 {
-    margin: 0;
+    margin: 5px 0 0 0;
     font-size: 9pt;
     line-height: 1.2;
 }
