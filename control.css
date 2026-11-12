@@ -50,8 +50,8 @@ h1 {
 }
 
 .slide-preview {
-    max-height: 120px;
-    overflow: auto;
+    height: 120px;
+    overflow-y: auto;
     padding: 8px;
     background: #2a292a;
     border-radius: 4px;
@@ -63,7 +63,7 @@ h1 {
 }
 
 .slide-preview:empty {
-    display: none;
+    visibility: hidden;
 }
 
 .button-row {
