@@ -306,6 +306,10 @@ window.OpenLP = {
             case "init":
                 OpenLP.updateText();
                 break;
+            case "displayModeRequest":
+                currentDisplayMode = null;
+                OpenLP.pollServer();
+                break;
             case "titleLayout":
                 let mTitleContainer = $(".title-container");
                 let mTitleDiv = $(".title");

@@ -19,6 +19,7 @@ var fadeDuration = 900;
 var autoSplitLongLines = true;
 var maxCharacters = 60;
 var minWords = 3;
+var settingsReady = false;
 
 var textFormatting = {
     "all": false,
@@ -35,24 +36,9 @@ openlpChannel.onmessage = function (ev) {
     let data = JSON.parse(ev.data);
     let type = data.type;
     if (type === "init") {
-        openlpChannel.postMessage(JSON.stringify({type: "hideOnBlank", value: $("#auto-hide-checkbox").prop("checked")}));
-        openlpChannel.postMessage(JSON.stringify({type: "crossfadeDuration", value: crossfadeDuration}));
-        openlpChannel.postMessage(JSON.stringify({type: "fadeDuration", value: fadeDuration}));
-        openlpChannel.postMessage(JSON.stringify({type: "hide", value: hiding}));
-        openlpChannel.postMessage(JSON.stringify({type: "resize", value: autoResize}));
-        openlpChannel.postMessage(JSON.stringify({type: "lyricsFont", value: $("#lyrics-font-size-spinner").val()}));
-        openlpChannel.postMessage(JSON.stringify({type: "titleFont", value: $("#title-font-size-spinner").val()}));
-        openlpChannel.postMessage(JSON.stringify({type: "textFormatting", value: textFormatting}));
-        openlpChannel.postMessage(JSON.stringify({type: "maxWidth", value: $("#lyrics-max-width-spinner").val()}));
-        openlpChannel.postMessage(JSON.stringify({type: "lyricsHeight", value: $("#lyrics-height-spinner").val()}));
-        openlpChannel.postMessage(JSON.stringify({type: "imageFit", value: $("#image-fit-select").val()}));
-        openlpChannel.postMessage(JSON.stringify({
-            type: "titleVisibility",
-            song: $("#title-visibility-song").prop("checked"),
-            bible: $("#title-visibility-scripture").prop("checked")
-        }));
-        transmitLyricsLayout();
-        transmitTitleLayout();
+        if (settingsReady) {
+            sendStageSettings();
+        }
     } else if (type === "displayMode") {
         updateDisplayMode(data.value);
     } else if (type === "lyrics") {
@@ -74,6 +60,27 @@ openlpChannel.onmessage = function (ev) {
         }
     }
 };
+
+function sendStageSettings() {
+    openlpChannel.postMessage(JSON.stringify({type: "hideOnBlank", value: $("#auto-hide-checkbox").prop("checked")}));
+    openlpChannel.postMessage(JSON.stringify({type: "crossfadeDuration", value: crossfadeDuration}));
+    openlpChannel.postMessage(JSON.stringify({type: "fadeDuration", value: fadeDuration}));
+    openlpChannel.postMessage(JSON.stringify({type: "hide", value: hiding}));
+    openlpChannel.postMessage(JSON.stringify({type: "resize", value: autoResize}));
+    openlpChannel.postMessage(JSON.stringify({type: "lyricsFont", value: $("#lyrics-font-size-spinner").val()}));
+    openlpChannel.postMessage(JSON.stringify({type: "titleFont", value: $("#title-font-size-spinner").val()}));
+    openlpChannel.postMessage(JSON.stringify({type: "textFormatting", value: textFormatting}));
+    openlpChannel.postMessage(JSON.stringify({type: "maxWidth", value: $("#lyrics-max-width-spinner").val()}));
+    openlpChannel.postMessage(JSON.stringify({type: "lyricsHeight", value: $("#lyrics-height-spinner").val()}));
+    openlpChannel.postMessage(JSON.stringify({type: "imageFit", value: $("#image-fit-select").val()}));
+    openlpChannel.postMessage(JSON.stringify({
+        type: "titleVisibility",
+        song: $("#title-visibility-song").prop("checked"),
+        bible: $("#title-visibility-scripture").prop("checked")
+    }));
+    transmitLyricsLayout();
+    transmitTitleLayout();
+}
 
 /* Split lines into smaller ones that are no longer than maxCharacters, but at least minWords long
  * If minWords results in more than maxCharacters on a given line, that line will have fewer than minWords
@@ -575,8 +582,11 @@ function startFirstServiceItem(button) {
 
 $(function () {
     loadSettings();
+    settingsReady = true;
     refreshCurrentItem();
     window.setInterval(refreshCurrentItem, 1000);
+    sendStageSettings();
+    openlpChannel.postMessage(JSON.stringify({type: "displayModeRequest"}));
     //add listeners
     $("#title-layout-h-anchor").change(function () {
         let val = $(this).val();
@@ -788,14 +798,14 @@ $(function () {
     });
     $("#next-button").click(function () {
         $("#action-status").text("");
-        if (autoSplitLongLines && displayNext(1)) {
+        if ($("#auto-split-long-lines-checkbox").prop("checked") && displayNext(1)) {
             return;
         }
         sendApiCommand("/api/v2/controller/progress", {action: "next"});
     });
     $("#previous-button").click(function () {
         $("#action-status").text("");
-        if (autoSplitLongLines && displayPrevious(1)) {
+        if ($("#auto-split-long-lines-checkbox").prop("checked") && displayPrevious(1)) {
             return;
         }
         sendApiCommand("/api/v2/controller/progress", {action: "previous"});
