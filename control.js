@@ -43,6 +43,8 @@ openlpChannel.onmessage = function (ev) {
         }
     } else if (type === "displayMode") {
         updateDisplayMode(data.value);
+    } else if (type === "imageSlide") {
+        $("#slide-navigation").toggle(!data.value);
     } else if (type === "lyrics") {
         originalCurrentLines = data.lines;
         nextSlideLines = data.nextLines || [];

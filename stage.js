@@ -167,6 +167,7 @@ window.OpenLP = {
                 ? (isImageSlide(slide) || !hasText)
                 : OpenLP.currentSlides.length === 0 && OpenLP.currentItem != null;
         let nextSlideText = OpenLP.getSlideText(OpenLP.currentSlides[OpenLP.currentSlide + 1]);
+        obsChannel.postMessage(JSON.stringify({type: "imageSlide", value: Boolean(hasImage)}));
         if (hasImage) {
             projectorImageSlide = true;
             $.getJSON("/api/v2/core/live-image")
