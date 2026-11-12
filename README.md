@@ -15,7 +15,7 @@ It would be beneficial to set up your presentation computer with a static IP to 
 1. In OpenLP, go to `Settings -> Configure OpenLP -> Remote`. Copy the 'Stage view URL'.
 2. Add a custom Browser source in OBS to your desired scene, and paste the stage view URL there. Don't forget to add the name of the custom stage view. If you named your stage `stream`, then your URL will look something like this: `http://192.168.1.7:4316/stage/stream`. Note: your IP may be different than mine.
 3. Add a custom browser dock by going to `View -> Docks -> Custom Browser Docks...` in OBS. Name the dock OpenLP Lyrics and paste the same URL that you had in the Browser source, but add `control.html` to it. E.g., `http://192.168.1.7:4316/stage/stream/control.html`.
-4. Right click on your Browser source and go to `Transform -> Edit transform...`. I keep the size at 1920x200, and only display 2 lines of lyrics at a time. You can set it up however you see fit. Other transform properties include `Position: 960, 960`, `Positional Alignment: Center`, `Bouding Box Type: Scale to inner bounds`, `Alignment in Bounding Box: Center`.
+4. Set the Browser source dimensions to match your projector output (for example, 1920x1080) if you want image slides to fill the OBS source. The stage captures OpenLP's live display using its API v2 live-image endpoint for image slides, so image support requires an OpenLP version with API v2. If you only use lyrics, you can instead size and position the source as a banner (for example, 1920x200). Other transform properties include `Position: 960, 960`, `Positional Alignment: Center`, `Bounding Box Type: Scale to inner bounds`, `Alignment in Bounding Box: Center`.
 5. Optionally, you can add a hotkey to hide/show the Browser source.
 
 You're all done.
@@ -24,6 +24,7 @@ To view the comprehensive guide with screenshots, go [here](https://obsproject.c
 
 ## Features
 - Can keep original slide formatting from OpenLP
+- Displays image slides using a capture of OpenLP's live display
 - Supports English, Spanish language
 - Control slides from OBS with next/previous slide buttons.
 - Auto-resize feature for text larger than viewing window.

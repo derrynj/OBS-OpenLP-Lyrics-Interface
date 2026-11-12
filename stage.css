@@ -3,6 +3,16 @@ body {
     overflow: hidden;
 }
 
+#projector-image {
+    display: none;
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    object-fit: contain;
+    background: #000;
+}
+
 #content {
     position: absolute;
     bottom: 0;

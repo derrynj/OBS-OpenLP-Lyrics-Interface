@@ -11,6 +11,24 @@ var alwaysHide = false;
 var crossfadeDuration = 500;
 var lyricsContainerIndex = 0;
 var fadeDuration = 900;
+var imageRequest = 0;
+var projectorImageSlide = false;
+
+function setProjectorImage(image) {
+    let projectorImage = $("#projector-image");
+    if (image) {
+        projectorImage.attr("src", image);
+        if (lyricsHidden) {
+            projectorImage.hide();
+        } else {
+            projectorImage.show();
+        }
+        $("#content").hide();
+    } else {
+        projectorImage.hide().attr("src", "");
+        $("#content").toggle(!lyricsHidden);
+    }
+}
 
 var titleVisible = {
     "songs": false,
@@ -38,7 +56,7 @@ window.OpenLP = {
             return;
         }
         let slide = OpenLP.currentSlides[OpenLP.currentSlide];
-        if (slide["title"]) {
+        if (slide && slide["title"] && typeof slide["text"] === "string") {
             let titleDiv = $(".title");
             let title = slide["title"];
             let validTitle = false;
@@ -79,6 +97,9 @@ window.OpenLP = {
                 }
                 titleHidden = false;
             }
+        } else {
+            $(".title").fadeOut(fadeDuration);
+            titleHidden = true;
         }
 
     },
@@ -128,9 +149,44 @@ window.OpenLP = {
             return;
         }
         let slide = OpenLP.currentSlides[OpenLP.currentSlide];
+        let request = ++imageRequest;
+        let hasText = slide && (typeof slide["html"] === "string" || typeof slide["text"] === "string");
+        let hasImage = slide
+                ? (slide["image"] || slide["path"] || !hasText)
+                : OpenLP.currentSlides.length === 0 && OpenLP.currentItem != null;
+        if (hasImage) {
+            projectorImageSlide = true;
+            $.getJSON("/api/v2/core/live-image")
+                    .done(function (data) {
+                        if (request !== imageRequest) {
+                            return;
+                        }
+                        let image = data.binary_image;
+                        if (typeof image !== "string" || !image.startsWith("data:image/")) {
+                            console.error("OpenLP returned an invalid live image response", data);
+                            setProjectorImage("");
+                            obsChannel.postMessage(JSON.stringify({type: "projectorImage", value: ""}));
+                            return;
+                        }
+                        setProjectorImage(image);
+                        obsChannel.postMessage(JSON.stringify({type: "projectorImage", value: image}));
+                    })
+                    .fail(function (xhr, status, error) {
+                        if (request === imageRequest) {
+                            console.error("Could not load the OpenLP live image", status, error);
+                            setProjectorImage("");
+                            obsChannel.postMessage(JSON.stringify({type: "projectorImage", value: ""}));
+                        }
+                    });
+            obsChannel.postMessage(JSON.stringify({type: "lyrics", lines: [""]}));
+            return;
+        }
+        projectorImageSlide = false;
+        setProjectorImage("");
+        obsChannel.postMessage(JSON.stringify({type: "projectorImage", value: ""}));
         let text = "";
         let tags = new Array();
-        if (slide["html"] || slide["text"]) {
+        if (slide && (slide["html"] || slide["text"])) {
             if (textFormatting['all'] === true) {
                 tags.push('all');
             } else {
@@ -191,21 +247,26 @@ window.OpenLP = {
                     let blankScreen = data.results.display === true
                             || data.results.theme === true
                             || data.results.blank === true;
-                    if (blankScreen && hideOnBlankScreen || alwaysHide) {
+                    let shouldHide = (blankScreen && hideOnBlankScreen) || alwaysHide;
+                    if (shouldHide) {
                         if (!lyricsHidden) {
                             lyricsContainer.fadeOut(fadeDuration);
                             titleDiv.fadeOut(fadeDuration);
+                            $("#projector-image").hide();
+                            imageRequest++;
                             lyricsHidden = true;
                         }
                     } else {
                         if (lyricsHidden) {
-                            if (!emptyString) {
+                            lyricsHidden = false;
+                            if (projectorImageSlide) {
+                                OpenLP.updateText();
+                            } else if (!emptyString) {
                                 lyricsContainer.fadeIn(fadeDuration);
                                 if (!titleHidden) {
                                     titleDiv.fadeIn(fadeDuration);
                                 }
                             }
-                            lyricsHidden = false;
                         }
                     }
                 }
@@ -316,6 +377,7 @@ window.OpenLP = {
                 $.get("/api/controller/live/previous");
                 break;
             case "lyrics":
+                setProjectorImage("");
                 if (data.value.length <= 4) { //empty str
                     lyricsContainer.fadeOut(fadeDuration);
                     emptyString = true;
@@ -339,6 +401,9 @@ window.OpenLP = {
                     }
                 }
                 updateLayout = true;
+                break;
+            case "projectorImage":
+                setProjectorImage(data.value);
                 break;
             default:
                 console.log("Unsupported message: " + data.type + ":");
