@@ -38,9 +38,9 @@
                     <button id="next-item-button" type="button" data-i18n="next-item">Next live item</button>
                 </div>
                 <div class="button-row display-controls">
-                    <button id="theme-button" type="button" data-i18n="theme-only">Theme only</button>
-                    <button id="blank-button" type="button" data-i18n="blank">Blank</button>
-                    <button id="show-button" type="button" data-i18n="show">Show</button>
+                    <button id="theme-button" type="button" aria-pressed="false" data-i18n="theme-only">Theme only</button>
+                    <button id="blank-button" type="button" aria-pressed="false" data-i18n="blank">Blank</button>
+                    <button id="show-button" type="button" aria-pressed="false" data-i18n="show">Show</button>
                 </div>
                 <div id="action-status" role="status" aria-live="polite"></div>
             </section>
@@ -97,7 +97,7 @@
                                 <label for="lyrics-layout-v-anchor" data-i18n="vertical-anchor">Vertical anchor:</label><br>
                                 <select id="lyrics-layout-v-anchor">
                                     <option value="Top" data-i18n="top">Top</option>
-                                    <option value="Bottom" data-i18n="bottom">Bottom</option>
+                                    <option value="Bottom" data-i18n="bottom" selected>Bottom</option>
                                     <option value="Center" data-i18n="center">Center</option>
                                 </select>
                             </div>
@@ -110,7 +110,7 @@
                                 <select id="lyrics-layout-h-anchor">
                                     <option value="Left" data-i18n="left">Left</option>
                                     <option value="Right" data-i18n="right">Right</option>
-                                    <option value="Center" data-i18n="center">Center</option>
+                                    <option value="Center" data-i18n="center" selected>Center</option>
                                 </select>
                             </div>
                             <div class="control-group">
@@ -127,7 +127,7 @@
                             </div>
                             <div class="control-group">
                                 <label for="lyrics-height-spinner" data-i18n="height">Height</label><br>
-                                <input id="lyrics-height-spinner" type="number" min="96" max="1080" step="8" value="800" size="5">
+                                <input id="lyrics-height-spinner" type="number" min="96" max="1080" step="8" value="1080" size="5">
                             </div>
                         </div>
                     </fieldset>
@@ -172,6 +172,17 @@
                                 <label for="fade-duration-spinner" data-i18n="fade-duration">Fade in/out duration</label><br>
                                 <input id="fade-duration-spinner" type="number" min="0" max="3000" step="100" value="900" size="5">
                             </div>
+                        </div>
+                    </fieldset>
+                    <fieldset class="control-group">
+                        <legend data-i18n="image-settings">Image settings</legend>
+                        <div class="control-group">
+                            <label for="image-fit-select" data-i18n="image-fit">Image fit:</label><br>
+                            <select id="image-fit-select">
+                                <option value="contain" data-i18n="image-fit-contain">Contain (fit whole image)</option>
+                                <option value="cover" data-i18n="image-fit-cover">Cover (fill; crop edges)</option>
+                                <option value="fill" data-i18n="image-fit-fill">Stretch (fill; may distort)</option>
+                            </select>
                         </div>
                     </fieldset>
                     <fieldset class="control-group">

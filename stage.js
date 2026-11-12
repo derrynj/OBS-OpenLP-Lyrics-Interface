@@ -13,12 +13,24 @@ var lyricsContainerIndex = 0;
 var fadeDuration = 900;
 var imageRequest = 0;
 var projectorImageSlide = false;
+var currentDisplayMode = null;
+
+function isImageSlide(slide) {
+    if (!slide) {
+        return false;
+    }
+    if (slide["image"] || slide["path"] || slide["tag"] === "image") {
+        return true;
+    }
+    let text = typeof slide["text"] === "string" ? slide["text"].trim() : "";
+    return /\.(avif|bmp|gif|jpe?g|png|svg|tiff?|webp)(?:[?#].*)?$/i.test(text);
+}
 
 function setProjectorImage(image) {
     let projectorImage = $("#projector-image");
     if (image) {
         projectorImage.attr("src", image);
-        if (lyricsHidden) {
+        if (lyricsHidden || alwaysHide) {
             projectorImage.hide();
         } else {
             projectorImage.show();
@@ -152,7 +164,7 @@ window.OpenLP = {
         let request = ++imageRequest;
         let hasText = slide && (typeof slide["html"] === "string" || typeof slide["text"] === "string");
         let hasImage = slide
-                ? (slide["image"] || slide["path"] || !hasText)
+                ? (isImageSlide(slide) || !hasText)
                 : OpenLP.currentSlides.length === 0 && OpenLP.currentItem != null;
         if (hasImage) {
             projectorImageSlide = true;
@@ -247,7 +259,18 @@ window.OpenLP = {
                     let blankScreen = data.results.display === true
                             || data.results.theme === true
                             || data.results.blank === true;
-                    let shouldHide = (blankScreen && hideOnBlankScreen) || alwaysHide;
+                    let displayMode = data.results.blank === true
+                            ? "blank"
+                            : data.results.theme === true
+                                    ? "theme"
+                                    : data.results.display === true
+                                            ? "display"
+                                            : "show";
+                    if (displayMode !== currentDisplayMode) {
+                        currentDisplayMode = displayMode;
+                        obsChannel.postMessage(JSON.stringify({type: "displayMode", value: displayMode}));
+                    }
+                    let shouldHide = (blankScreen && (hideOnBlankScreen || projectorImageSlide)) || alwaysHide;
                     if (shouldHide) {
                         if (!lyricsHidden) {
                             lyricsContainer.fadeOut(fadeDuration);
@@ -334,6 +357,13 @@ window.OpenLP = {
                 break;
             case "lyricsHeight":
                 $("#lyrics-container").css("height", data.value + "px");
+                break;
+            case "imageFit":
+                if (["contain", "cover", "fill"].includes(data.value)) {
+                    $("#projector-image").css("object-fit", data.value);
+                } else {
+                    console.error("Unsupported projector image fit:", data.value);
+                }
                 break;
             case "hide":
                 alwaysHide = data.value;
