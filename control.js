@@ -39,6 +39,7 @@ openlpChannel.onmessage = function (ev) {
     if (type === "init") {
         if (settingsReady) {
             sendStageSettings();
+            requestCurrentPreview();
         }
     } else if (type === "displayMode") {
         updateDisplayMode(data.value);
@@ -82,6 +83,10 @@ function sendStageSettings() {
     }));
     transmitLyricsLayout();
     transmitTitleLayout();
+}
+
+function requestCurrentPreview() {
+    openlpChannel.postMessage(JSON.stringify({type: "previewRequest"}));
 }
 
 /* Split lines into smaller ones that are no longer than maxCharacters, but at least minWords long
@@ -599,6 +604,7 @@ $(function () {
     refreshCurrentItem();
     window.setInterval(refreshCurrentItem, 1000);
     sendStageSettings();
+    requestCurrentPreview();
     openlpChannel.postMessage(JSON.stringify({type: "displayModeRequest"}));
     //add listeners
     $("#title-layout-h-anchor").change(function () {
@@ -828,6 +834,9 @@ $(function () {
             return;
         }
         sendApiCommand("/api/v2/controller/progress", {action: "previous"});
+    });
+    $(".slide-preview-panel").on("dblclick", function () {
+        sendApiCommand("/api/v2/controller/progress", {action: "next"});
     });
     $("#previous-item-button").click(function () {
         sendApiCommand("/api/v2/service/progress", {action: "previous"});

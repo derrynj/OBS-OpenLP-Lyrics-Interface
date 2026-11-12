@@ -322,6 +322,9 @@ window.OpenLP = {
                 currentDisplayMode = null;
                 OpenLP.pollServer();
                 break;
+            case "previewRequest":
+                OpenLP.loadSlides();
+                break;
             case "titleLayout":
                 let mTitleContainer = $(".title-container");
                 let mTitleDiv = $(".title");
