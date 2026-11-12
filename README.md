@@ -31,6 +31,7 @@ To view the comprehensive guide with screenshots, go [here](https://obsproject.c
 - View the current live item and navigate lyrics, live items, and OpenLP display modes from the OBS dock.
 - Start the first valid queued service item from the dock when nothing is currently live.
 - When automatic line splitting is enabled, Next/Previous reveals lyric lines before advancing slides; when disabled, they directly navigate OpenLP slides.
+- The preview shows the next unrevealed lyric line when automatic splitting is enabled, or the next OpenLP slide when it is disabled.
 - Keep detailed layout, formatting, and behavior controls in the dock's Settings panel.
 - Auto-resize feature for text larger than viewing window.
 - Auto-line break feature for long text.

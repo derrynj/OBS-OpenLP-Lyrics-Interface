@@ -6,10 +6,10 @@ var originalCurrentLines = [];
 var lastDisplayedIndex = -1;
 
 var autoResize = true;
+var nextSlideLines = [];
 
 var max_saved_lines = 5;
 var pastLines = [];
-var pastPreviews = [];
 var historyIndex = 0;
 
 var hiding = false;
@@ -43,20 +43,21 @@ openlpChannel.onmessage = function (ev) {
         updateDisplayMode(data.value);
     } else if (type === "lyrics") {
         originalCurrentLines = data.lines;
+        nextSlideLines = data.nextLines || [];
         updateCurrentLines();
 
         if ($("#auto-update-checkbox").prop("checked")) {
             if ($("#display-all-checkbox").prop("checked") || !autoSplitLongLines) {
-                displayNext(currentLines.length);
+                if (!displayNext(currentLines.length)) {
+                    updateNextPreview();
+                }
             } else {
-                displayNext(1);
+                if (!displayNext(1)) {
+                    updateNextPreview();
+                }
             }
         } else {
-            let lines = "";
-            for (let i = 0; i < currentLines.length; i++) {
-                lines += currentLines[i] + "<br>";
-            }
-            $("#slide-text").html(lines);
+            updateNextPreview();
         }
     }
 };
@@ -177,29 +178,16 @@ function displayNext(amount) {
     }
     openlpChannel.postMessage(JSON.stringify({type: "lyrics", value: linesToDisplay}));
 
-    //update preview
-    let preview = "";
-    for (let i = 0; i < lastDisplayedIndex + 1 && i < currentLines.length; i++) {
-        preview += currentLines[i] + "<br>";
-    }
-    preview += "<b>" + linesToDisplay + "</b>";
     lastDisplayedIndex += amount;
-    for (let i = lastDisplayedIndex + 1; i < currentLines.length; i++) {
-        preview += currentLines[i] + "<br>";
-    }
-    $("#slide-text").html(preview);
+    updateNextPreview();
 
     //update previous lines
     for (let i = max_saved_lines - 1; i > 0; i--) {
         if (pastLines[i - 1] !== undefined) {
             pastLines[i] = pastLines[i - 1];
         }
-        if (pastPreviews[i - 1] !== undefined) {
-            pastPreviews[i] = pastPreviews[i - 1];
-        }
     }
     pastLines[0] = linesToDisplay;
-    pastPreviews[0] = preview;
     historyIndex = 0;
     return true;
 }
@@ -216,19 +204,28 @@ function displayPrevious(amount) {
     }
     openlpChannel.postMessage(JSON.stringify({type: "lyrics", value: linesToDisplay}));
 
-    let preview = "";
-    let highlightStart = Math.max(0, lastDisplayedIndex - amount + 1);
-    for (let i = 0; i < currentLines.length; i++) {
-        if (i === highlightStart && lastDisplayedIndex >= highlightStart) {
-            preview += "<b>";
-        }
-        preview += currentLines[i] + "<br>";
-        if (i === lastDisplayedIndex) {
-            preview += "</b>";
-        }
-    }
-    $("#slide-text").html(preview);
+    updateNextPreview();
     return true;
+}
+
+function updateNextPreview() {
+    let nextLineIndex = currentLines.findIndex(function (line, index) {
+        return index > lastDisplayedIndex && line.trim().length > 0;
+    });
+    let showNextLine = $("#auto-split-long-lines-checkbox").prop("checked")
+            && nextLineIndex !== -1;
+    let lines = showNextLine ? [currentLines[nextLineIndex]] : nextSlideLines;
+    let labelKey = showNextLine ? "next-line-preview" : "next-slide-preview";
+    $("#preview-label").attr("data-i18n", labelKey).text($.i18n(labelKey));
+    $("#slide-text").html(lines.filter(Boolean).join("<br>"));
+}
+
+function updateNavigationLabels() {
+    let splitEnabled = $("#auto-split-long-lines-checkbox").prop("checked");
+    let previousKey = splitEnabled ? "previous-line" : "previous-slide";
+    let nextKey = splitEnabled ? "next-line" : "next-slide";
+    $("#previous-button").attr("data-i18n", previousKey).text($.i18n(previousKey));
+    $("#next-button").attr("data-i18n", nextKey).text($.i18n(nextKey));
 }
 
 function displaySaved(index) {
@@ -238,8 +235,8 @@ function displaySaved(index) {
         return;
     }
     openlpChannel.postMessage(JSON.stringify({type: "lyrics", value: pastLines[index]}));
-    $("#slide-text").html(pastPreviews[index]);
     historyIndex = index;
+    updateNextPreview();
 }
 
 function updateCurrentLines() {
@@ -583,6 +580,8 @@ function startFirstServiceItem(button) {
 $(function () {
     loadSettings();
     settingsReady = true;
+    updateNavigationLabels();
+    updateNextPreview();
     refreshCurrentItem();
     window.setInterval(refreshCurrentItem, 1000);
     sendStageSettings();
@@ -682,8 +681,8 @@ $(function () {
         autoSplitLongLines = $(this).prop("checked");
         window.localStorage.setItem("autoSplitLongLines", autoSplitLongLines);
         updateCurrentLines();
-        let lines = currentLines.join("<br>");
-        $("#slide-text").html(lines ? lines + "<br>" : "");
+        updateNextPreview();
+        updateNavigationLabels();
         if (autoSplitLongLines) {
             $("#split-max-characters").show();
             $("#split-min-words").show();

@@ -166,6 +166,7 @@ window.OpenLP = {
         let hasImage = slide
                 ? (isImageSlide(slide) || !hasText)
                 : OpenLP.currentSlides.length === 0 && OpenLP.currentItem != null;
+        let nextSlideText = OpenLP.getSlideText(OpenLP.currentSlides[OpenLP.currentSlide + 1]);
         if (hasImage) {
             projectorImageSlide = true;
             $.getJSON("/api/v2/core/live-image")
@@ -190,12 +191,24 @@ window.OpenLP = {
                             obsChannel.postMessage(JSON.stringify({type: "projectorImage", value: ""}));
                         }
                     });
-            obsChannel.postMessage(JSON.stringify({type: "lyrics", lines: [""]}));
+            obsChannel.postMessage(JSON.stringify({
+                type: "lyrics",
+                lines: [""],
+                nextLines: nextSlideText.split(/\n/g)
+            }));
             return;
         }
         projectorImageSlide = false;
         setProjectorImage("");
         obsChannel.postMessage(JSON.stringify({type: "projectorImage", value: ""}));
+        let text = OpenLP.getSlideText(slide);
+        obsChannel.postMessage(JSON.stringify({
+            type: "lyrics",
+            lines: text.split(/\n/g),
+            nextLines: nextSlideText.split(/\n/g)
+        }));
+    },
+    getSlideText: function (slide) {
         let text = "";
         let tags = new Array();
         if (slide && (slide["html"] || slide["text"])) {
@@ -237,8 +250,7 @@ window.OpenLP = {
                 text = slide["text"];
             }
         }
-
-        obsChannel.postMessage(JSON.stringify({type: "lyrics", lines: text.split(/\n/g)}));
+        return text;
     },
     pollServer: function () {
         let lyricsContainer = $(".lyrics").eq(lyricsContainerIndex);
