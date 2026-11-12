@@ -227,6 +227,23 @@ function updateNextPreview() {
     updateCurrentPreview();
 }
 
+function updatePreviewHeight() {
+    let preview = document.querySelector(".slide-preview");
+    let heading = document.querySelector(".slide-preview-panel h2");
+    let previews = document.querySelector(".slide-previews");
+    let previewStyle = window.getComputedStyle(preview);
+    let headingHeight = heading.getBoundingClientRect().height;
+    let lineHeight = parseFloat(previewStyle.lineHeight);
+    if (!Number.isFinite(lineHeight)) {
+        lineHeight = parseFloat(previewStyle.fontSize) * 1.4;
+    }
+    let verticalPadding = parseFloat(previewStyle.paddingTop) + parseFloat(previewStyle.paddingBottom);
+    let gap = parseFloat(window.getComputedStyle(previews).rowGap);
+    let paneHeight = lineHeight * previewLineCount + verticalPadding;
+    $(".slide-preview").css("height", paneHeight + "px");
+    $(".slide-previews").css("height", (2 * (paneHeight + headingHeight) + gap) + "px");
+}
+
 function updateCurrentPreview() {
     let preview = currentLines.map(function (line, index) {
         return index <= lastDisplayedIndex ? "<b>" + line + "</b>" : line;
@@ -599,6 +616,7 @@ function startFirstServiceItem(button) {
 $(function () {
     loadSettings();
     settingsReady = true;
+    updatePreviewHeight();
     updateNavigationLabels();
     updateNextPreview();
     refreshCurrentItem();
@@ -696,11 +714,13 @@ $(function () {
         let font = $(this).val();
         $("*").css({"font-size": font + "pt"});
         window.localStorage.setItem("controlFont", font);
+        updatePreviewHeight();
     });
     $("#preview-line-count-spinner").change(function () {
         previewLineCount = Math.max(1, Math.min(20, Number($(this).val()) || 1));
         $(this).val(previewLineCount);
         window.localStorage.setItem("previewLineCount", previewLineCount);
+        updatePreviewHeight();
         updateNextPreview();
     });
     $("#auto-split-long-lines-checkbox").change(function () {

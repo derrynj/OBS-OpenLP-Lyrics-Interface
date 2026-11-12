@@ -53,25 +53,23 @@ h1 {
     display: flex;
     flex-direction: column;
     gap: 6px;
-    height: 180px;
-    min-height: 0;
+    height: auto;
 }
 
 .slide-preview-panel {
     display: flex;
-    flex: 1;
+    flex: 0 0 auto;
     flex-direction: column;
-    min-height: 0;
 }
 
 .slide-preview-panel h2 {
     margin: 0;
     font-size: 9pt;
+    line-height: 1.2;
 }
 
 .slide-preview {
-    flex: 1;
-    min-height: 0;
+    flex: 0 0 auto;
     overflow-y: auto;
     padding: 8px;
     background: #2a292a;
