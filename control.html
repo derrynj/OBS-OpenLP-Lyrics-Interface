@@ -28,8 +28,16 @@
                     <span id="connection-status" role="status" data-i18n="connecting">Connecting…</span>
                 </header>
                 <button id="start-first-item-button" class="start-first-item-button" type="button" hidden data-i18n="start-first-item">Start first item</button>
-                <h2 id="preview-label" data-i18n="next-slide-preview">Next slide / verse</h2>
-                <div id="slide-text" class="slide-preview"></div>
+                <div class="slide-previews">
+                    <section class="slide-preview-panel">
+                        <h2 data-i18n="current-slide-preview">Current slide / verse</h2>
+                        <div id="slide-text" class="slide-preview"></div>
+                    </section>
+                    <section class="slide-preview-panel">
+                        <h2 id="preview-label" data-i18n="next-slide-preview">Next slide / verse</h2>
+                        <div id="next-slide-text" class="slide-preview"></div>
+                    </section>
+                </div>
                 <div class="button-row lyric-controls">
                     <button id="previous-button" type="button" data-i18n="previous-lyric">Previous lyric</button>
                     <button id="next-button" type="button" data-i18n="next-lyric">Next lyric</button>
@@ -200,6 +208,10 @@
                                     <option value="Large" data-i18n="large">Large</option>
                                     <option value="Larger" data-i18n="larger">Larger</option>
                                 </select>
+                            </div>
+                            <div class="control-group">
+                                <label for="preview-line-count-spinner" data-i18n="preview-line-count">Preview lines</label><br>
+                                <input id="preview-line-count-spinner" type="number" min="1" max="20" step="1" value="3" size="3">
                             </div>
                         </div>
                     </fieldset>

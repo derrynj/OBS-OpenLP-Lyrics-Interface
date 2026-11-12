@@ -32,6 +32,7 @@ To view the comprehensive guide with screenshots, go [here](https://obsproject.c
 - Start the first valid queued service item from the dock when nothing is currently live.
 - When automatic line splitting is enabled, Next/Previous reveals lyric lines before advancing slides; when disabled, they directly navigate OpenLP slides.
 - The preview shows the next unrevealed lyric line when automatic splitting is enabled, or the next OpenLP slide when it is disabled.
+- Choose how many lines are shown in each slide preview.
 - Keep detailed layout, formatting, and behavior controls in the dock's Settings panel.
 - Auto-resize feature for text larger than viewing window.
 - Auto-line break feature for long text.

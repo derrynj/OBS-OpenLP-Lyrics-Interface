@@ -19,6 +19,7 @@ var fadeDuration = 900;
 var autoSplitLongLines = true;
 var maxCharacters = 60;
 var minWords = 3;
+var previewLineCount = 3;
 var settingsReady = false;
 
 var textFormatting = {
@@ -217,7 +218,15 @@ function updateNextPreview() {
     let lines = showNextLine ? [currentLines[nextLineIndex]] : nextSlideLines;
     let labelKey = showNextLine ? "next-line-preview" : "next-slide-preview";
     $("#preview-label").attr("data-i18n", labelKey).text($.i18n(labelKey));
-    $("#slide-text").html(lines.filter(Boolean).join("<br>"));
+    $("#next-slide-text").html(lines.filter(Boolean).slice(0, previewLineCount).join("<br>"));
+    updateCurrentPreview();
+}
+
+function updateCurrentPreview() {
+    let preview = currentLines.map(function (line, index) {
+        return index <= lastDisplayedIndex ? "<b>" + line + "</b>" : line;
+    }).filter(Boolean).slice(0, previewLineCount).join("<br>");
+    $("#slide-text").html(preview);
 }
 
 function updateNavigationLabels() {
@@ -323,6 +332,11 @@ function loadSettings() {
     if (loadedControlFont !== null) {
         $("*").css({"font-size": loadedControlFont + "pt"});
         $("#control-font-size-spinner").val(Number(loadedControlFont));
+    }
+    let loadedPreviewLineCount = Number(window.localStorage.getItem("previewLineCount"));
+    if (Number.isInteger(loadedPreviewLineCount) && loadedPreviewLineCount >= 1 && loadedPreviewLineCount <= 20) {
+        previewLineCount = loadedPreviewLineCount;
+        $("#preview-line-count-spinner").val(previewLineCount);
     }
     let loadedLyricsFont = window.localStorage.getItem("lyricsFont");
     if (loadedLyricsFont !== null) {
@@ -676,6 +690,12 @@ $(function () {
         let font = $(this).val();
         $("*").css({"font-size": font + "pt"});
         window.localStorage.setItem("controlFont", font);
+    });
+    $("#preview-line-count-spinner").change(function () {
+        previewLineCount = Math.max(1, Math.min(20, Number($(this).val()) || 1));
+        $(this).val(previewLineCount);
+        window.localStorage.setItem("previewLineCount", previewLineCount);
+        updateNextPreview();
     });
     $("#auto-split-long-lines-checkbox").change(function () {
         autoSplitLongLines = $(this).prop("checked");
