@@ -15,8 +15,10 @@ It would be beneficial to set up your presentation computer with a static IP to 
 1. In OpenLP, go to `Settings -> Configure OpenLP -> Remote`. Copy the 'Stage view URL'.
 2. Add a custom Browser source in OBS to your desired scene, and paste the stage view URL there. Don't forget to add the name of the custom stage view. If you named your stage `stream`, then your URL will look something like this: `http://192.168.1.7:4316/stage/stream`. Note: your IP may be different than mine.
 3. Add a custom browser dock by going to `View -> Docks -> Custom Browser Docks...` in OBS. Name the dock OpenLP Lyrics and paste the same URL that you had in the Browser source, but add `control.html` to it. E.g., `http://192.168.1.7:4316/stage/stream/control.html`.
-4. Set the Browser source dimensions to match your projector output (for example, 1920x1080) if you want image slides to fill the OBS source. The stage captures OpenLP's live display using its API v2 live-image endpoint for image slides, so image support requires an OpenLP version with API v2. If you only use lyrics, you can instead size and position the source as a banner (for example, 1920x200). Other transform properties include `Position: 960, 960`, `Positional Alignment: Center`, `Bounding Box Type: Scale to inner bounds`, `Alignment in Bounding Box: Center`.
+4. Set the Browser source dimensions to match your projector output (for example, 1920x1080) if you want image slides to fill the OBS source. The stage captures OpenLP's live display using its API v2 live-image endpoint for image slides, so image support requires an OpenLP version with API v2. The dock's live-item navigation and display-mode controls also use API v2. If you only use lyrics, you can instead size and position the source as a banner (for example, 1920x200). Other transform properties include `Position: 960, 960`, `Positional Alignment: Center`, `Bounding Box Type: Scale to inner bounds`, `Alignment in Bounding Box: Center`.
 5. Optionally, you can add a hotkey to hide/show the Browser source.
+
+If OpenLP API authentication is enabled, the dock will report an error when a control action is rejected; API credentials are not currently configurable in the dock.
 
 You're all done.
 
@@ -26,14 +28,17 @@ To view the comprehensive guide with screenshots, go [here](https://obsproject.c
 - Can keep original slide formatting from OpenLP
 - Displays image slides using a capture of OpenLP's live display
 - Supports English, Spanish language
-- Control slides from OBS with next/previous slide buttons.
+- View the current live item and navigate lyrics, live items, and OpenLP display modes from the OBS dock.
+- Start the first valid queued service item from the dock when nothing is currently live.
+- When automatic line splitting is enabled, Next/Previous reveals lyric lines before advancing slides; when disabled, they directly navigate OpenLP slides.
+- Keep detailed layout, formatting, and behavior controls in the dock's Settings panel.
 - Auto-resize feature for text larger than viewing window.
 - Auto-line break feature for long text.
 - Crossfade lyrics option.
 - Option to hide lyrics when live view is hidden.
 - Hide lyrics toggle button.
-- Auto-show on slide change automatically displays the next slide, displaying the same number of lines as you have set on your **first** Display Next button. 
-- The two Display Next preset buttons have independent line counts.
+- Auto-show on slide change can automatically display the configured number of lines.
+- Display all can show every line automatically when auto-update is enabled.
 - Display all checkbox will automatically display all lines when auto-show is enabled.
 - Undo display button if you would like to go to previous lyric. Only the last 5 lyrics are saved. Redo display to go forward in saved lyrics.
 

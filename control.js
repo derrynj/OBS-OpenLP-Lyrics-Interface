@@ -1,8 +1,9 @@
 const LEFT = 0, RIGHT = 1, CENTER = 2, TOP = 0, BOTTOM = 1;
 
 var openlpChannel = new BroadcastChannel("obs_openlp_channel");
-var currentLines;
-var lastDisplayedIndex;
+var currentLines = [];
+var originalCurrentLines = [];
+var lastDisplayedIndex = -1;
 
 var autoResize = true;
 
@@ -52,22 +53,14 @@ openlpChannel.onmessage = function (ev) {
         transmitLyricsLayout();
         transmitTitleLayout();
     } else if (type === "lyrics") {
-        lastDisplayedIndex = -1;
-
-        if (autoSplitLongLines) {
-            currentLines = Array();
-            $.each(data.lines, function (idx, longLine) {
-                currentLines = currentLines.concat(splitLines(longLine).split(/\n/g));
-            });
-        } else {
-            currentLines = data.lines;
-        }
+        originalCurrentLines = data.lines;
+        updateCurrentLines();
 
         if ($("#auto-update-checkbox").prop("checked")) {
-            if ($("#display-all-checkbox").prop("checked")) {
+            if ($("#display-all-checkbox").prop("checked") || !autoSplitLongLines) {
                 displayNext(currentLines.length);
             } else {
-                displayNext(Number($("#increment-spinner-1").val()));
+                displayNext(1);
             }
         } else {
             let lines = "";
@@ -160,8 +153,8 @@ function splitLines(text) {
 }
 
 function displayNext(amount) {
-    if (amount <= 0) {
-        return;
+    if (!currentLines.length || amount <= 0) {
+        return false;
     }
 
     //send lines to stage
@@ -170,7 +163,7 @@ function displayNext(amount) {
         linesToDisplay += currentLines[i] + "<br>";
     }
     if (linesToDisplay.length <= 0) {
-        return;
+        return false;
     }
     openlpChannel.postMessage(JSON.stringify({type: "lyrics", value: linesToDisplay}));
 
@@ -198,6 +191,34 @@ function displayNext(amount) {
     pastLines[0] = linesToDisplay;
     pastPreviews[0] = preview;
     historyIndex = 0;
+    return true;
+}
+
+function displayPrevious(amount) {
+    if (lastDisplayedIndex < 0 || amount <= 0) {
+        return false;
+    }
+
+    lastDisplayedIndex = Math.max(-1, lastDisplayedIndex - amount);
+    let linesToDisplay = currentLines.slice(0, lastDisplayedIndex + 1).join("<br>");
+    if (linesToDisplay.length > 0) {
+        linesToDisplay += "<br>";
+    }
+    openlpChannel.postMessage(JSON.stringify({type: "lyrics", value: linesToDisplay}));
+
+    let preview = "";
+    let highlightStart = Math.max(0, lastDisplayedIndex - amount + 1);
+    for (let i = 0; i < currentLines.length; i++) {
+        if (i === highlightStart && lastDisplayedIndex >= highlightStart) {
+            preview += "<b>";
+        }
+        preview += currentLines[i] + "<br>";
+        if (i === lastDisplayedIndex) {
+            preview += "</b>";
+        }
+    }
+    $("#slide-text").html(preview);
+    return true;
 }
 
 function displaySaved(index) {
@@ -209,6 +230,18 @@ function displaySaved(index) {
     openlpChannel.postMessage(JSON.stringify({type: "lyrics", value: pastLines[index]}));
     $("#slide-text").html(pastPreviews[index]);
     historyIndex = index;
+}
+
+function updateCurrentLines() {
+    lastDisplayedIndex = -1;
+    if (autoSplitLongLines) {
+        currentLines = [];
+        $.each(originalCurrentLines, function (idx, longLine) {
+            currentLines = currentLines.concat(splitLines(longLine).split(/\n/g));
+        });
+    } else {
+        currentLines = originalCurrentLines.slice();
+    }
 }
 
 function updateButtonSize(opt) {
@@ -259,14 +292,6 @@ function loadSettings() {
     if (loadedLyricsHeight !== null) {
         $("#lyrics-height-spinner").val(Number(loadedLyricsHeight));
     }
-    let loadedLineIncrement1 = window.localStorage.getItem("lineIncrement1");
-    if (loadedLineIncrement1 !== null) {
-        $("#increment-spinner-1").val(Number(loadedLineIncrement1));
-    }
-    let loadedLineIncrement2 = window.localStorage.getItem("lineIncrement2");
-    if (loadedLineIncrement2 !== null) {
-        $("#increment-spinner-2").val(Number(loadedLineIncrement2));
-    }
     let loadedAutoUpdate = window.localStorage.getItem("autoUpdate");
     if (loadedAutoUpdate !== null) {
         $("#auto-update-checkbox").prop("checked", loadedAutoUpdate === "true");
@@ -303,9 +328,9 @@ function loadSettings() {
     }
     let loadedAutoSplitLongLines = window.localStorage.getItem("autoSplitLongLines");
     if (loadedAutoSplitLongLines !== null) {
-        autoSplitLongLines = loadedAutoSplitLongLines;
-        $("#auto-split-long-lines-checkbox").prop("checked", loadedAutoSplitLongLines === "true");
-        if (autoSplitLongLines !== "true") {
+        autoSplitLongLines = loadedAutoSplitLongLines === "true";
+        $("#auto-split-long-lines-checkbox").prop("checked", autoSplitLongLines);
+        if (!autoSplitLongLines) {
             $("#split-max-characters").hide();
             $("#split-min-words").hide();
         }
@@ -382,7 +407,7 @@ function loadSettings() {
     if (titleVisibleScripture !== null) {
         $("#title-visibility-scripture").prop("checked", titleVisibleScripture === "true");
     }
-    $("legend").each(function (i) {
+    $("legend[data-collapse]").each(function (i) {
         let id = $(this).attr("data-collapse");
         let content = $("#" + id);
         id = id.replace("/-/g", "_");
@@ -450,8 +475,84 @@ function transmitLyricsLayout() {
     }));
 }
 
+function sendApiCommand(url, data) {
+    $("#action-status").text("");
+    $.ajax({
+        url: url,
+        method: "POST",
+        contentType: "application/json",
+        data: JSON.stringify(data)
+    }).fail(function (xhr) {
+        showApiError(xhr);
+    });
+}
+
+function showApiError(xhr) {
+    let message = xhr.status === 401
+            ? $.i18n("api-authentication-required")
+            : $.i18n("command-failed") + " (HTTP " + (xhr.status || "?") + ")";
+    $("#action-status").text(message);
+}
+
+function refreshCurrentItem() {
+    $.getJSON("/api/v2/service/items")
+            .done(function (items) {
+                let currentItem = items.find(function (item) {
+                    return item.selected;
+                });
+                let firstAvailableItem = items.find(function (item) {
+                    return item.is_valid;
+                });
+                $("#start-first-item-button").prop("hidden", Boolean(currentItem) || !firstAvailableItem);
+                $("#current-item").text(currentItem ? currentItem.title : $.i18n("no-live-item"));
+                $("#connection-status").text($.i18n("connected"));
+            })
+            .fail(function () {
+                $("#start-first-item-button").prop("hidden", true);
+                $("#current-item").text($.i18n("no-live-item"));
+                $("#connection-status").text($.i18n("connection-unavailable"));
+            });
+}
+
+function startFirstServiceItem(button) {
+    button.prop("disabled", true);
+    $("#action-status").text("");
+    $.getJSON("/api/v2/service/items")
+            .done(function (items) {
+                if (items.some(function (item) {
+                    return item.selected;
+                })) {
+                    refreshCurrentItem();
+                    button.prop("disabled", false);
+                    return;
+                }
+                let firstAvailableItem = items.find(function (item) {
+                    return item.is_valid;
+                });
+                if (!firstAvailableItem) {
+                    $("#action-status").text($.i18n("no-valid-service-items"));
+                    button.prop("disabled", false);
+                    return;
+                }
+                $.ajax({
+                    url: "/api/v2/service/show",
+                    method: "POST",
+                    contentType: "application/json",
+                    data: JSON.stringify({id: firstAvailableItem.id})
+                }).done(refreshCurrentItem).fail(showApiError).always(function () {
+                    button.prop("disabled", false);
+                });
+            })
+            .fail(function (xhr) {
+                showApiError(xhr);
+                button.prop("disabled", false);
+            });
+}
+
 $(function () {
     loadSettings();
+    refreshCurrentItem();
+    window.setInterval(refreshCurrentItem, 1000);
     //add listeners
     $("#title-layout-h-anchor").change(function () {
         let val = $(this).val();
@@ -504,7 +605,7 @@ $(function () {
         window.localStorage.setItem("lyricsHeight", height);
         openlpChannel.postMessage(JSON.stringify({type: "lyricsHeight", value: height}));
     });
-    $("legend").click(function () {
+    $("legend[data-collapse]").click(function () {
         $(this).toggleClass("active-collapsible");
         let id = $(this).attr("data-collapse");
         let content = $("#" + id);
@@ -516,12 +617,6 @@ $(function () {
             content.css("display", "none");
             window.localStorage.setItem("collapsed_" + id, true);
         }
-    });
-    $("#increment-spinner-1").change(function () {
-        window.localStorage.setItem("lineIncrement1", $(this).val());
-    });
-    $("#increment-spinner-2").change(function () {
-        window.localStorage.setItem("lineIncrement2", $(this).val());
     });
     $("#auto-update-checkbox").change(function () {
         window.localStorage.setItem("autoUpdate", $(this).prop("checked"));
@@ -547,7 +642,9 @@ $(function () {
     $("#auto-split-long-lines-checkbox").change(function () {
         autoSplitLongLines = $(this).prop("checked");
         window.localStorage.setItem("autoSplitLongLines", autoSplitLongLines);
-        //TODO: auto-update control & stage
+        updateCurrentLines();
+        let lines = currentLines.join("<br>");
+        $("#slide-text").html(lines ? lines + "<br>" : "");
         if (autoSplitLongLines) {
             $("#split-max-characters").show();
             $("#split-min-words").show();
@@ -654,15 +751,6 @@ $(function () {
         updateButtonSize(opt);
         window.localStorage.setItem("buttonSize", opt);
     });
-    $("#increment-button-1").click(function () {
-        displayNext(Number($("#increment-spinner-1").val()));
-    });
-    $("#increment-button-2").click(function () {
-        displayNext(Number($("#increment-spinner-2").val()));
-    });
-    $("#remaining-button").click(function () {
-        displayNext(currentLines.length - (lastDisplayedIndex + 1));
-    });
     $("#undo-button").click(function () {
         displaySaved(historyIndex + 1);
     });
@@ -670,10 +758,36 @@ $(function () {
         displaySaved(historyIndex - 1);
     });
     $("#next-button").click(function () {
-        openlpChannel.postMessage(JSON.stringify({type: "nextSlide"}));
+        $("#action-status").text("");
+        if (autoSplitLongLines && displayNext(1)) {
+            return;
+        }
+        sendApiCommand("/api/v2/controller/progress", {action: "next"});
     });
     $("#previous-button").click(function () {
-        openlpChannel.postMessage(JSON.stringify({type: "previousSlide"}));
+        $("#action-status").text("");
+        if (autoSplitLongLines && displayPrevious(1)) {
+            return;
+        }
+        sendApiCommand("/api/v2/controller/progress", {action: "previous"});
+    });
+    $("#previous-item-button").click(function () {
+        sendApiCommand("/api/v2/service/progress", {action: "previous"});
+    });
+    $("#next-item-button").click(function () {
+        sendApiCommand("/api/v2/service/progress", {action: "next"});
+    });
+    $("#theme-button").click(function () {
+        sendApiCommand("/api/v2/core/display", {display: "theme"});
+    });
+    $("#blank-button").click(function () {
+        sendApiCommand("/api/v2/core/display", {display: "blank"});
+    });
+    $("#show-button").click(function () {
+        sendApiCommand("/api/v2/core/display", {display: "show"});
+    });
+    $("#start-first-item-button").click(function () {
+        startFirstServiceItem($(this));
     });
     $("#hide-button").click(function () {
         if (!hiding) {
